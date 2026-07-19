@@ -8,6 +8,7 @@
     "start": "node dist/mcp/server.js",
     "dev": "ts-node mcp/server.ts",
     "simulate": "ts-node examples/buyer-agent-simulation.ts",
+    "deepseek": "ts-node examples/deepseek-buyer-simulation.ts",
     "discovery": "ts-node bazaar/discovery.ts"
   },
   "keywords": [
