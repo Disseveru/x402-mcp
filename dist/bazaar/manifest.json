@@ -106,6 +106,20 @@
             },
             "mcpTool": "agent_execution_proof_attestor",
             "endpoint": "/mcp/v1/call"
+        },
+        {
+            "id": "tool:agent_sla_micro_insurance",
+            "name": "agent_sla_micro_insurance",
+            "description": "Locks micro-bonds for seller tool calls. Automatically triggers instant buyer refunds and micro-penalties if seller latency exceeds SLA thresholds.",
+            "category": "sla-guarantee",
+            "paymentRequired": true,
+            "price": {
+                "amount": 5,
+                "currency": "USD_CENT",
+                "formatted": "$0.05 USD"
+            },
+            "mcpTool": "agent_sla_micro_insurance",
+            "endpoint": "/mcp/v1/call"
         }
     ]
 }
