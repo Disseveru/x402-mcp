@@ -103,6 +103,12 @@ export class AgentCommerceMCPServer {
         const result = await toolDef.handler(toolArgs || req.body.parameters || {}, proof);
 
         if (result.status === 402) {
+          const challengePayload = result.challenge || result;
+          const encodedChallenge = Buffer.from(JSON.stringify(challengePayload)).toString('base64');
+          res.setHeader('PAYMENT-REQUIRED', encodedChallenge);
+          res.setHeader('Payment-Required', encodedChallenge);
+          res.setHeader('X-402-Payment-Required', encodedChallenge);
+          res.setHeader('WWW-Authenticate', `x402 challenge="${challengePayload.challengeHash || challengePayload.invoiceId || ''}"`);
           res.status(402).json(result);
           return;
         }

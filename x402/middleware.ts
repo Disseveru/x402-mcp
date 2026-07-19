@@ -45,6 +45,8 @@ export function requireX402Payment(
     const challenge = verifier.createChallenge(toolName, price);
     const encodedChallenge = Buffer.from(JSON.stringify(challenge)).toString('base64');
 
+    res.setHeader('PAYMENT-REQUIRED', encodedChallenge);
+    res.setHeader('Payment-Required', encodedChallenge);
     res.setHeader('X-402-Payment-Required', encodedChallenge);
     res.setHeader('WWW-Authenticate', `x402 challenge="${challenge.challengeHash}"`);
     
