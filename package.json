@@ -4,7 +4,7 @@
   "description": "End-to-end suite of monetized tools for Gemini agent-to-agent commerce using x402 payments, Bazaar discovery, and MCP.",
   "main": "dist/mcp/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node dist/mcp/server.js",
     "dev": "ts-node mcp/server.ts",
     "simulate": "ts-node examples/buyer-agent-simulation.ts",
