@@ -2,6 +2,7 @@ export declare class AgentCommerceMCPServer {
     private server;
     private app;
     constructor();
+    private setupMiddleware;
     private setupHandlers;
     private setupHttpEndpoints;
     startStdio(): Promise<void>;

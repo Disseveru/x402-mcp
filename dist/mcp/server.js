@@ -23,9 +23,29 @@ class AgentCommerceMCPServer {
             },
         });
         this.app = (0, express_1.default)();
-        this.app.use(express_1.default.json());
+        this.setupMiddleware();
         this.setupHandlers();
         this.setupHttpEndpoints();
+    }
+    setupMiddleware() {
+        this.app.use(express_1.default.json({ limit: '10mb' }));
+        // Production Resilience, Security & CORS Headers Middleware
+        this.app.use((_req, res, next) => {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-402-Payment-Proof, PAYMENT-REQUIRED, Payment-Required, X-402-Payment-Required');
+            res.setHeader('Access-Control-Expose-Headers', 'PAYMENT-REQUIRED, Payment-Required, X-402-Payment-Required, WWW-Authenticate, X-402-Receipt');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.setHeader('X-Frame-Options', 'DENY');
+            res.setHeader('X-XSS-Protection', '1; mode=block');
+            res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            if (_req.method === 'OPTIONS') {
+                res.sendStatus(204);
+                return;
+            }
+            next();
+        });
     }
     setupHandlers() {
         // List Tools Handler
@@ -73,6 +93,48 @@ class AgentCommerceMCPServer {
         });
     }
     setupHttpEndpoints() {
+        // Railway Container Health Probes & Monitoring Handler
+        const healthHandler = (_req, res) => {
+            res.status(200).json({
+                status: 'ok',
+                uptime: Math.floor(process.uptime()),
+                timestamp: new Date().toISOString(),
+                version: '1.0.0',
+                environment: process.env.NODE_ENV || 'production',
+                targetNetwork: 'base-mainnet',
+                serverName: process.env.MCP_SERVER_NAME || 'gemini-agent-commerce-suite',
+                merchantPaymentAddress: process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+                activeToolsCount: Object.keys(tools_1.MCP_TOOLS).length,
+                services: {
+                    bazaarDiscovery: 'healthy',
+                    x402Protocol: 'healthy',
+                    mcpServer: 'healthy',
+                },
+            });
+        };
+        this.app.get('/health', healthHandler);
+        this.app.get('/healthz', healthHandler);
+        this.app.get('/status', healthHandler);
+        this.app.get('/', (req, res) => {
+            if (req.headers.accept?.includes('application/json') || req.query.json === 'true') {
+                healthHandler(req, res);
+            }
+            else {
+                res.status(200).json({
+                    status: 'ok',
+                    service: 'x402 Autonomous Seller MCP Platform & Service Factory',
+                    network: 'base-mainnet',
+                    endpoints: {
+                        health: '/health',
+                        bazaar: '/.well-known/bazaar.json',
+                        tools: '/gemini/v1/tools',
+                        execute: '/gemini/v1/call',
+                    },
+                    toolsCount: Object.keys(tools_1.MCP_TOOLS).length,
+                    activeTools: Object.keys(tools_1.MCP_TOOLS),
+                });
+            }
+        });
         // Attach Bazaar Discovery Endpoints
         this.app.use('/', (0, discovery_1.createBazaarRouter)());
         // Primary Gemini & MCP Tool Execution Endpoint
@@ -113,7 +175,7 @@ class AgentCommerceMCPServer {
                 price: t.priceFormatted,
                 parameters: t.inputSchema,
             }));
-            res.json({ defaultAgent: 'Gemini 3.5 / Antigravity', tools });
+            res.json({ defaultAgent: 'Gemini 3.5 / Antigravity', toolsCount: tools.length, tools });
         };
         this.app.get('/gemini/v1/tools', handleListTools);
         this.app.get('/mcp/v1/tools', handleListTools);
@@ -127,6 +189,7 @@ class AgentCommerceMCPServer {
         const actualPort = process.env.PORT ? parseInt(process.env.PORT, 10) : port;
         return this.app.listen(actualPort, () => {
             console.log(`[Gemini MCP Server] HTTP Server running on port ${actualPort}`);
+            console.log(`[Gemini MCP Server] Health Probe Endpoint: http://localhost:${actualPort}/health`);
             console.log(`[Gemini MCP Server] Bazaar Discovery: http://localhost:${actualPort}/.well-known/bazaar.json`);
             console.log(`[Gemini MCP Server] Gemini Tool Endpoint: http://localhost:${actualPort}/gemini/v1/call`);
         });

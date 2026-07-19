@@ -14,18 +14,25 @@ async function runEndToEndSimulation() {
     // Allow server to initialize
     await new Promise(resolve => setTimeout(resolve, 500));
     try {
-        // 2. Discover capabilities via Bazaar Catalog
+        // 2. Test Container Health Probe Endpoint
+        console.log('\n--- STEP 0: TESTING PRODUCTION HEALTH PROBE ENDPOINT ---');
+        const healthRes = await fetch('http://localhost:4020/health');
+        const healthData = (await healthRes.json());
+        console.log('[Health Check Status]:', healthData.status);
+        console.log('[Health Probe Output]:', JSON.stringify(healthData, null, 2));
+        // 3. Discover capabilities via Bazaar Catalog
         console.log('\n--- STEP 1: DISCOVERING CAPABILITIES VIA BAZAAR PROTOCOL ---');
         const manifest = catalog_1.BazaarCatalog.getManifest();
         console.log(`[Bazaar Provider] ${manifest.provider.name} - ${manifest.provider.description}`);
+        console.log(`[Bazaar Payment Address] ${manifest.provider.paymentAddress}`);
         console.log(`[Bazaar Capabilities Found]: ${manifest.capabilities.length} tools`);
         manifest.capabilities.forEach(cap => {
             console.log(`  • [${cap.id}] ${cap.name}: ${cap.description} (${cap.price.formatted})`);
         });
-        // 3. Initialize Autonomous Gemini Buyer Agent
+        // 4. Initialize Autonomous Gemini Buyer Agent
         console.log('\n--- STEP 2: INITIALIZING AUTONOMOUS GEMINI BUYER AGENT WITH X402 WALLET ---');
         const buyerAgent = new client_1.AutonomousBuyerAgentClient('0xGeminiBuyerAgent_0x998877665544332211');
-        // 4. Scenario A: Request Monetized Market Intelligence Tool
+        // 5. Scenario A: Request Monetized Market Intelligence Tool
         console.log('\n--- STEP 3: EXECUTING MONETIZED TOOL 1 - market_data_insights ---');
         const marketDataResult = await buyerAgent.executeMonetizedCall(async (paymentProof) => {
             const toolDef = tools_1.MCP_TOOLS['market_data_insights'];
@@ -38,32 +45,18 @@ async function runEndToEndSimulation() {
         console.log('\n[SUCCESS] Received Settled Service Response for market_data_insights:');
         console.log('Receipt:', JSON.stringify(marketDataResult.receipt, null, 2));
         console.log('Data:', JSON.stringify(marketDataResult.data, null, 2));
-        // 5. Scenario B: Request Monetized Remote Agent Execution Sandbox Tool
-        console.log('\n--- STEP 4: EXECUTING MONETIZED TOOL 2 - agent_task_executor ---');
-        const executorResult = await buyerAgent.executeMonetizedCall(async (paymentProof) => {
-            const toolDef = tools_1.MCP_TOOLS['agent_task_executor'];
+        // 6. Scenario B: Request Security Audit Tool
+        console.log('\n--- STEP 4: EXECUTING MONETIZED TOOL 4 - agent_code_security_auditor ---');
+        const auditResult = await buyerAgent.executeMonetizedCall(async (paymentProof) => {
+            const toolDef = tools_1.MCP_TOOLS['agent_code_security_auditor'];
             return await toolDef.handler({
-                taskName: 'Sentiment Summary Synthesis',
-                codeOrInstructions: 'analyze real-time whale flow data and summarize trade signal for Grok',
+                code: 'function execute(payload) { return eval(payload); }',
+                strictness: 'high',
             }, paymentProof);
         });
-        console.log('\n[SUCCESS] Received Settled Execution Output for agent_task_executor:');
-        console.log('Receipt:', JSON.stringify(executorResult.receipt, null, 2));
-        console.log('Execution Result:', JSON.stringify(executorResult.data, null, 2));
-        // 6. Scenario C: Request Monetized Escrow Contract Creation
-        console.log('\n--- STEP 5: EXECUTING MONETIZED TOOL 3 - agent_escrow_service ---');
-        const escrowResult = await buyerAgent.executeMonetizedCall(async (paymentProof) => {
-            const toolDef = tools_1.MCP_TOOLS['agent_escrow_service'];
-            return await toolDef.handler({
-                buyerAgent: '0xGrokBuyerAgent_0x8899AABBCCDD',
-                sellerAgent: '0xDataNodeSellerAgent_0x1122334455',
-                amountUSD: 250.00,
-                conditions: 'Release funds upon delivery of validated dataset checksum',
-            }, paymentProof);
-        });
-        console.log('\n[SUCCESS] Received Settled Escrow State for agent_escrow_service:');
-        console.log('Receipt:', JSON.stringify(escrowResult.receipt, null, 2));
-        console.log('Escrow Contract:', JSON.stringify(escrowResult.data, null, 2));
+        console.log('\n[SUCCESS] Received Settled Security Audit Result:');
+        console.log('Receipt:', JSON.stringify(auditResult.receipt, null, 2));
+        console.log('Audit Report:', JSON.stringify(auditResult.data, null, 2));
         console.log('\n========================================================================');
         console.log('  E2E SIMULATION COMPLETED SUCCESSFULLY - ALL MONETIZED TOOLS SETTLED   ');
         console.log('========================================================================\n');

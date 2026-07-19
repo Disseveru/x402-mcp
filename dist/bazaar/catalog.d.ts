@@ -5,15 +5,15 @@ export interface CapabilityQuery {
 }
 export declare class BazaarCatalog {
     static getManifest(): {
-        bazaarVersion: string;
         provider: {
+            paymentAddress: string;
             name: string;
             description: string;
             homepage: string;
             contact: string;
-            paymentAddress: string;
             defaultTargetAgent: string;
         };
+        bazaarVersion: string;
         capabilities: {
             id: string;
             name: string;

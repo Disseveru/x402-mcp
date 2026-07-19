@@ -8,11 +8,19 @@ export interface CapabilityQuery {
 
 export class BazaarCatalog {
   public static getManifest() {
-    return manifest;
+    const paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS || manifest.provider.paymentAddress;
+    return {
+      ...manifest,
+      provider: {
+        ...manifest.provider,
+        paymentAddress,
+      },
+    };
   }
 
   public static searchCapabilities(query: CapabilityQuery) {
-    return manifest.capabilities.filter(cap => {
+    const activeManifest = this.getManifest();
+    return activeManifest.capabilities.filter(cap => {
       if (query.category && cap.category !== query.category) {
         return false;
       }

@@ -50,6 +50,76 @@
       },
       "mcpTool": "agent_escrow_service",
       "endpoint": "/gemini/v1/call"
+    },
+    {
+      "id": "tool:agent_code_security_auditor",
+      "name": "agent_code_security_auditor",
+      "description": "Performs static analysis and vulnerability scanning on agent code payloads before execution.",
+      "category": "security-auditing",
+      "paymentRequired": true,
+      "price": {
+        "amount": 75,
+        "currency": "USD_CENT",
+        "formatted": "$0.75 USD"
+      },
+      "mcpTool": "agent_code_security_auditor",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:liquidity_arbitrage_predictor",
+      "name": "liquidity_arbitrage_predictor",
+      "description": "Scans DEX/CEX order books to identify real-time cross-chain arbitrage spreads.",
+      "category": "quantitative-intelligence",
+      "paymentRequired": true,
+      "price": {
+        "amount": 60,
+        "currency": "USD_CENT",
+        "formatted": "$0.60 USD"
+      },
+      "mcpTool": "liquidity_arbitrage_predictor",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_context_firewall",
+      "name": "agent_context_firewall",
+      "description": "Sanitizes bought data streams and incoming API payloads for hidden prompt injections, jailbreaks, and context-poisoning attacks before agent ingestion.",
+      "category": "security-infrastructure",
+      "paymentRequired": true,
+      "price": {
+        "amount": 40,
+        "currency": "USD_CENT",
+        "formatted": "$0.40 USD"
+      },
+      "mcpTool": "agent_context_firewall",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_execution_proof_attestor",
+      "name": "agent_execution_proof_attestor",
+      "description": "Generates cryptographic step-telemetry and merkle execution trace commitments proving compute work was actually performed by seller agents.",
+      "category": "execution-verification",
+      "paymentRequired": true,
+      "price": {
+        "amount": 35,
+        "currency": "USD_CENT",
+        "formatted": "$0.35 USD"
+      },
+      "mcpTool": "agent_execution_proof_attestor",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_sla_micro_insurance",
+      "name": "agent_sla_micro_insurance",
+      "description": "Locks micro-bonds for seller tool calls. Automatically triggers instant buyer refunds and micro-penalties if seller latency exceeds SLA thresholds.",
+      "category": "sla-guarantee",
+      "paymentRequired": true,
+      "price": {
+        "amount": 50,
+        "currency": "USD_CENT",
+        "formatted": "$0.50 USD"
+      },
+      "mcpTool": "agent_sla_micro_insurance",
+      "endpoint": "/mcp/v1/call"
     }
   ]
 }
