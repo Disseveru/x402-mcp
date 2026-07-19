@@ -1,0 +1,55 @@
+{
+  "bazaarVersion": "1.0",
+  "provider": {
+    "name": "Gemini Agent Commerce Suite",
+    "description": "Monetized production tools for autonomous Gemini & LLM AI agent-to-agent commerce.",
+    "homepage": "https://agentcommerce.suite",
+    "contact": "support@agentcommerce.suite",
+    "paymentAddress": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    "defaultTargetAgent": "Gemini 3.5 / Antigravity Agent"
+  },
+  "capabilities": [
+    {
+      "id": "tool:data_insights",
+      "name": "market_data_insights",
+      "description": "Fetches real-time institutional quantitative market metrics and sentiment data for Gemini agents.",
+      "category": "market-intelligence",
+      "paymentRequired": true,
+      "price": {
+        "amount": 50,
+        "currency": "USD_CENT",
+        "formatted": "$0.50 USD"
+      },
+      "mcpTool": "market_data_insights",
+      "endpoint": "/gemini/v1/call"
+    },
+    {
+      "id": "tool:agent_executor",
+      "name": "agent_task_executor",
+      "description": "Executes remote sub-agent task payloads in an isolated secure sandbox for Gemini tasks.",
+      "category": "compute-execution",
+      "paymentRequired": true,
+      "price": {
+        "amount": 100,
+        "currency": "USD_CENT",
+        "formatted": "$1.00 USD"
+      },
+      "mcpTool": "agent_task_executor",
+      "endpoint": "/gemini/v1/call"
+    },
+    {
+      "id": "tool:escrow_settlement",
+      "name": "agent_escrow_service",
+      "description": "Creates and releases multi-sig conditional escrow contracts for Gemini agent-to-agent trades.",
+      "category": "escrow-settlement",
+      "paymentRequired": true,
+      "price": {
+        "amount": 25,
+        "currency": "USD_CENT",
+        "formatted": "$0.25 USD"
+      },
+      "mcpTool": "agent_escrow_service",
+      "endpoint": "/gemini/v1/call"
+    }
+  ]
+}

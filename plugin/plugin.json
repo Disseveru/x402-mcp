@@ -1,0 +1,43 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Gemini Agent Commerce Suite",
+  "name_for_model": "gemini_agent_commerce_suite",
+  "description_for_human": "Monetized production tools for autonomous Gemini & AI agent-to-agent commerce using x402 payments and Bazaar discovery.",
+  "description_for_model": "Plugin allowing Gemini AI agents to discover, pay for, and execute premium monetized tools (Market Data Insights, Remote Agent Compute Execution, and Multi-sig Escrow Settlement) using the x402 payment standard.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "mcp",
+    "url": "http://localhost:4020/.well-known/bazaar.json",
+    "mcp_endpoint": "/gemini/v1/call",
+    "has_user_authentication": false
+  },
+  "logo_url": "https://agentcommerce.suite/gemini_logo.png",
+  "contact_email": "support@agentcommerce.suite",
+  "legal_info_url": "https://agentcommerce.suite/legal",
+  "x402_configuration": {
+    "enabled": true,
+    "payment_header": "X-402-Payment-Proof",
+    "challenge_header": "X-402-Payment-Required",
+    "settlement_currency": "USD_CENT",
+    "merchant_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+  },
+  "tools": [
+    {
+      "name": "market_data_insights",
+      "description": "Fetch real-time institutional quantitative market metrics and sentiment data for Gemini.",
+      "price": "$0.50 USD"
+    },
+    {
+      "name": "agent_task_executor",
+      "description": "Executes remote sub-agent task payloads in an isolated secure sandbox.",
+      "price": "$1.00 USD"
+    },
+    {
+      "name": "agent_escrow_service",
+      "description": "Creates and releases multi-sig conditional escrow contracts for agent-to-agent trades.",
+      "price": "$0.25 USD"
+    }
+  ]
+}
