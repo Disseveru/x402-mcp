@@ -8,7 +8,11 @@ export interface CapabilityQuery {
 
 export class BazaarCatalog {
   public static getManifest() {
-    return manifest;
+    const cloned = JSON.parse(JSON.stringify(manifest));
+    if (process.env.MERCHANT_PAYMENT_ADDRESS) {
+      cloned.provider.paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS;
+    }
+    return cloned;
   }
 
   public static searchCapabilities(query: CapabilityQuery) {

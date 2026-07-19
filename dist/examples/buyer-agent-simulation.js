@@ -19,7 +19,7 @@ async function runEndToEndSimulation() {
         const manifest = catalog_1.BazaarCatalog.getManifest();
         console.log(`[Bazaar Provider] ${manifest.provider.name} - ${manifest.provider.description}`);
         console.log(`[Bazaar Capabilities Found]: ${manifest.capabilities.length} tools`);
-        manifest.capabilities.forEach(cap => {
+        manifest.capabilities.forEach((cap) => {
             console.log(`  • [${cap.id}] ${cap.name}: ${cap.description} (${cap.price.formatted})`);
         });
         // 3. Initialize Autonomous Gemini Buyer Agent
