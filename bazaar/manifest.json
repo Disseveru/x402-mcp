@@ -50,6 +50,34 @@
       },
       "mcpTool": "agent_escrow_service",
       "endpoint": "/gemini/v1/call"
+    },
+    {
+      "id": "tool:agent_code_security_auditor",
+      "name": "agent_code_security_auditor",
+      "description": "Performs static analysis and vulnerability scanning on agent code payloads before execution.",
+      "category": "security-auditing",
+      "paymentRequired": true,
+      "price": {
+        "amount": 150,
+        "currency": "USD_CENT",
+        "formatted": "$1.50 USD"
+      },
+      "mcpTool": "agent_code_security_auditor",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:liquidity_arbitrage_predictor",
+      "name": "liquidity_arbitrage_predictor",
+      "description": "Scans DEX/CEX order books to identify real-time cross-chain arbitrage spreads.",
+      "category": "quantitative-intelligence",
+      "paymentRequired": true,
+      "price": {
+        "amount": 75,
+        "currency": "USD_CENT",
+        "formatted": "$0.75 USD"
+      },
+      "mcpTool": "liquidity_arbitrage_predictor",
+      "endpoint": "/mcp/v1/call"
     }
   ]
 }
