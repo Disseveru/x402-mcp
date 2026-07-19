@@ -10,6 +10,8 @@ const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
 const express_1 = __importDefault(require("express"));
 const tools_1 = require("./tools");
 const discovery_1 = require("../bazaar/discovery");
+const database_service_1 = require("../services/database.service");
+const cache_service_1 = require("../services/cache.service");
 class AgentCommerceMCPServer {
     server;
     app;
@@ -45,7 +47,35 @@ class AgentCommerceMCPServer {
                 throw new Error(`Tool '${name}' not found in Gemini Agent Commerce Suite`);
             }
             const paymentProof = args?.paymentProof;
-            const result = await toolDef.handler(args, paymentProof);
+            // Try to get from cache first
+            let result;
+            if (!paymentProof) {
+                result = await cache_service_1.cache.getToolResultFromCache(name, args);
+                if (result) {
+                    console.log(`[Cache Hit] Tool '${name}' result served from cache`);
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: JSON.stringify(result, null, 2),
+                            },
+                        ],
+                    };
+                }
+            }
+            result = await toolDef.handler(args, paymentProof);
+            // Cache successful results
+            if (result.success && !paymentProof) {
+                await cache_service_1.cache.cacheToolResult(name, args, result, 3600);
+            }
+            // Log tool execution to database
+            try {
+                const agentId = (args && typeof args === 'object' && 'agentId' in args) ? String(args.agentId) : null;
+                await database_service_1.db.logToolExecution(name, agentId, paymentProof ? 'PAID' : 'UNPAID', Buffer.from(JSON.stringify(result)).toString('hex').slice(0, 64), { args: typeof args === 'string' ? args : Object.keys(args || {}) });
+            }
+            catch (err) {
+                console.warn(`[Database] Failed to log tool execution: ${err}`);
+            }
             if (result.status === 402) {
                 return {
                     content: [
@@ -85,8 +115,31 @@ class AgentCommerceMCPServer {
                     res.status(404).json({ error: `Tool ${toolName} not found in Gemini Suite` });
                     return;
                 }
+                // Try cache first
+                let result;
+                if (!paymentProof) {
+                    result = await cache_service_1.cache.getToolResultFromCache(toolName, toolArgs);
+                    if (result) {
+                        console.log(`[Cache Hit] Tool '${toolName}' result served from cache`);
+                        res.json({ ...result, cached: true });
+                        return;
+                    }
+                }
                 const proof = paymentProof || toolArgs?.paymentProof;
-                const result = await toolDef.handler(toolArgs || req.body.parameters || {}, proof);
+                result = await toolDef.handler(toolArgs || req.body.parameters || {}, proof);
+                // Cache successful results
+                if (result.success && !proof) {
+                    await cache_service_1.cache.cacheToolResult(toolName, toolArgs, result, 3600);
+                }
+                // Log to database
+                try {
+                    const ipAddr = req.ip || null;
+                    await database_service_1.db.logToolExecution(toolName, ipAddr, proof ? 'PAID' : 'UNPAID', Buffer.from(JSON.stringify(result)).toString('hex').slice(0, 64), { method: 'HTTP', ipAddress: ipAddr });
+                    await cache_service_1.cache.incrementCounter(`tool:calls:${toolName}`, 1);
+                }
+                catch (err) {
+                    console.warn(`[Database] Failed to log tool execution: ${err}`);
+                }
                 if (result.status === 402) {
                     const challengePayload = result.challenge || result;
                     const encodedChallenge = Buffer.from(JSON.stringify(challengePayload)).toString('base64');
@@ -100,6 +153,7 @@ class AgentCommerceMCPServer {
                 res.json(result);
             }
             catch (err) {
+                console.error('[Server] Tool call error:', err);
                 res.status(500).json({ error: err.message || 'Internal Gemini MCP server error' });
             }
         };
@@ -117,18 +171,75 @@ class AgentCommerceMCPServer {
         };
         this.app.get('/gemini/v1/tools', handleListTools);
         this.app.get('/mcp/v1/tools', handleListTools);
+        // Health check endpoint
+        this.app.get('/health', async (req, res) => {
+            try {
+                const cacheStatus = cache_service_1.cache ? 'connected' : 'disconnected';
+                const dbStatus = database_service_1.db ? 'connected' : 'disconnected';
+                res.json({
+                    status: 'healthy',
+                    server: 'Gemini Agent Commerce MCP Suite',
+                    cache: cacheStatus,
+                    database: dbStatus,
+                    uptime: process.uptime(),
+                });
+            }
+            catch (err) {
+                res.status(500).json({ status: 'unhealthy', error: String(err) });
+            }
+        });
+        // Stats endpoint
+        this.app.get('/stats', async (req, res) => {
+            try {
+                const stats = {
+                    tools: Object.keys(tools_1.MCP_TOOLS).length,
+                    toolCalls: {},
+                };
+                for (const toolName of Object.keys(tools_1.MCP_TOOLS)) {
+                    const count = await cache_service_1.cache.getCounter(`tool:calls:${toolName}`);
+                    stats.toolCalls[toolName] = count;
+                }
+                res.json(stats);
+            }
+            catch (err) {
+                res.status(500).json({ error: String(err) });
+            }
+        });
+    }
+    async initialize() {
+        console.log('[Server] Initializing services...');
+        try {
+            await cache_service_1.cache.connect();
+            console.log('[Server] Cache service initialized');
+        }
+        catch (err) {
+            console.warn('[Server] Cache service failed to initialize:', err);
+        }
+        try {
+            await database_service_1.db.connect();
+            await database_service_1.db.createToolAuditTable();
+            await database_service_1.db.createToolUsageTable();
+            console.log('[Server] Database service initialized');
+        }
+        catch (err) {
+            console.warn('[Server] Database service failed to initialize:', err);
+        }
     }
     async startStdio() {
+        await this.initialize();
         const transport = new stdio_js_1.StdioServerTransport();
         await this.server.connect(transport);
         console.error('[Gemini MCP Server] Connected to stdio transport.');
     }
-    listenHttp(port = 4020) {
+    async listenHttp(port = 4020) {
+        await this.initialize();
         const actualPort = process.env.PORT ? parseInt(process.env.PORT, 10) : port;
         return this.app.listen(actualPort, () => {
             console.log(`[Gemini MCP Server] HTTP Server running on port ${actualPort}`);
             console.log(`[Gemini MCP Server] Bazaar Discovery: http://localhost:${actualPort}/.well-known/bazaar.json`);
             console.log(`[Gemini MCP Server] Gemini Tool Endpoint: http://localhost:${actualPort}/gemini/v1/call`);
+            console.log(`[Gemini MCP Server] Health Check: http://localhost:${actualPort}/health`);
+            console.log(`[Gemini MCP Server] Stats: http://localhost:${actualPort}/stats`);
         });
     }
 }
