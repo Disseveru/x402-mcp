@@ -78,6 +78,34 @@
             },
             "mcpTool": "liquidity_arbitrage_predictor",
             "endpoint": "/mcp/v1/call"
+        },
+        {
+            "id": "tool:agent_context_firewall",
+            "name": "agent_context_firewall",
+            "description": "Sanitizes bought data streams and incoming API payloads for hidden prompt injections, jailbreaks, and context-poisoning attacks before agent ingestion.",
+            "category": "security-infrastructure",
+            "paymentRequired": true,
+            "price": {
+                "amount": 10,
+                "currency": "USD_CENT",
+                "formatted": "$0.10 USD"
+            },
+            "mcpTool": "agent_context_firewall",
+            "endpoint": "/mcp/v1/call"
+        },
+        {
+            "id": "tool:agent_execution_proof_attestor",
+            "name": "agent_execution_proof_attestor",
+            "description": "Generates cryptographic step-telemetry and merkle execution trace commitments proving compute work was actually performed by seller agents.",
+            "category": "execution-verification",
+            "paymentRequired": true,
+            "price": {
+                "amount": 15,
+                "currency": "USD_CENT",
+                "formatted": "$0.15 USD"
+            },
+            "mcpTool": "agent_execution_proof_attestor",
+            "endpoint": "/mcp/v1/call"
         }
     ]
 }
