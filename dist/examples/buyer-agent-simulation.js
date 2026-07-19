@@ -26,7 +26,7 @@ async function runEndToEndSimulation() {
         console.log(`[Bazaar Provider] ${manifest.provider.name} - ${manifest.provider.description}`);
         console.log(`[Bazaar Payment Address] ${manifest.provider.paymentAddress}`);
         console.log(`[Bazaar Capabilities Found]: ${manifest.capabilities.length} tools`);
-        manifest.capabilities.forEach(cap => {
+        manifest.capabilities.forEach((cap) => {
             console.log(`  • [${cap.id}] ${cap.name}: ${cap.description} (${cap.price.formatted})`);
         });
         // 4. Initialize Autonomous Gemini Buyer Agent

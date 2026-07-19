@@ -7,18 +7,15 @@ exports.BazaarCatalog = void 0;
 const manifest_json_1 = __importDefault(require("./manifest.json"));
 class BazaarCatalog {
     static getManifest() {
-        const paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS || manifest_json_1.default.provider.paymentAddress;
-        return {
-            ...manifest_json_1.default,
-            provider: {
-                ...manifest_json_1.default.provider,
-                paymentAddress,
-            },
-        };
+        const cloned = JSON.parse(JSON.stringify(manifest_json_1.default));
+        if (process.env.MERCHANT_PAYMENT_ADDRESS) {
+            cloned.provider.paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS;
+        }
+        return cloned;
     }
     static searchCapabilities(query) {
         const activeManifest = this.getManifest();
-        return activeManifest.capabilities.filter(cap => {
+        return activeManifest.capabilities.filter((cap) => {
             if (query.category && cap.category !== query.category) {
                 return false;
             }

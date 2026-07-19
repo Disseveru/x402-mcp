@@ -120,6 +120,20 @@
             },
             "mcpTool": "agent_sla_micro_insurance",
             "endpoint": "/mcp/v1/call"
+        },
+        {
+            "id": "tool:x402_atomic_pipeline_router",
+            "name": "x402_atomic_pipeline_router",
+            "description": "Orchestrates multi-agent dependency DAGs with a single atomic x402 payment that automatically fans out and settles across sub-agent nodes.",
+            "category": "pipeline-orchestration",
+            "paymentRequired": true,
+            "price": {
+                "amount": 25,
+                "currency": "USD_CENT",
+                "formatted": "$0.25 USD"
+            },
+            "mcpTool": "x402_atomic_pipeline_router",
+            "endpoint": "/mcp/v1/call"
         }
     ]
 }
