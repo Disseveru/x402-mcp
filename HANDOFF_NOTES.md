@@ -8,7 +8,7 @@
 
 This project (`x402-mcp`) is an **Autonomous Seller MCP Platform & Service Factory** designed for agent-to-agent (A2A) commerce:
 - **x402 HTTP Transport v2 Protocol**: Enforces base64 `PAYMENT-REQUIRED` response headers for machine micropayments.
-- **Bazaar Discovery Protocol**: Exposes machine-readable capabilities via `/.well-known/bazaar.json`.
+- **Bazaar Discovery Protocol**: Exposes machine-readable capabilities via `/.well-known/bazaar.json`
 - **Model Context Protocol (MCP)**: Exposes monetized tools via HTTP (`/mcp/v1/call`) and Stdio transports.
 - **Local Desktop DeepSeek Integration**: Connected to local desktop Ollama (`http://localhost:11434/v1`) using `deepseek-coder:latest`.
 - **Autonomous 12-Hour Scanner**: Automated market demand scanner that synthesizes non-crypto killer agent infrastructure tools end-to-end.
@@ -38,7 +38,17 @@ This project (`x402-mcp`) is an **Autonomous Seller MCP Platform & Service Facto
 
 ---
 
-## 3. Current Live Services (9 Total)
+## 3. DEEP DEPENDENCY-LEVEL RESILIENCE & FACT-CHECKING (MANDATORY)
+
+- 🔴 **DEEP DEPENDENCY RESILIENCE ALWAYS**: Surface-level container health checks are INSUFFICIENT. All infrastructure features MUST implement deep, dependency-level health probes and active failover:
+  - **Base RPC (CRITICAL)**: Test `eth_chainId` (8453). Auto-failover across backup pool (`mainnet.base.org`, `llamarpc`, `1rpc`, `drpc`).
+  - **Redis (CRITICAL)**: Test `PING`. If down, reject incoming tool calls with **HTTP 503 Service Unavailable** to prevent nonce replay attacks.
+  - **Postgres (HIGH)**: Connection query (`SELECT 1`) test with **3x exponential backoff retries** (100ms -> 300ms -> 900ms) before flagging degraded.
+- 🔴 **FACT-CHECK & DOUBLE-CHECK EVERYTHING**: Every agent must audit and verify live HTTP status codes, headers, and failover behavior before marking any task as complete.
+
+---
+
+## 4. Current Live Services (9 Total)
 
 1. `agent_context_firewall` (`$0.40 USD`) - Sanitizes incoming data payloads for prompt injections and jailbreaks.
 2. `agent_execution_proof_attestor` (`$0.35 USD`) - Cryptographic Proof-of-Useful-Work trace attestation.
@@ -52,7 +62,7 @@ This project (`x402-mcp`) is an **Autonomous Seller MCP Platform & Service Facto
 
 ---
 
-## 4. Key Execution Commands
+## 5. Key Execution Commands
 
 ```bash
 # Build TypeScript project (Must compile with 0 errors)
@@ -73,3 +83,4 @@ railway logs
 # SSH into Railway container
 railway ssh
 ```
+
