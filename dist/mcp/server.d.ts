@@ -1,6 +1,7 @@
 export declare class AgentCommerceMCPServer {
     private server;
     private app;
+    private healthMonitor;
     constructor();
     private setupMiddleware;
     private setupHandlers;

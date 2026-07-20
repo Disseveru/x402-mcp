@@ -8,13 +8,16 @@ import express from 'express';
 import { DynamicToolRegistry } from './dynamic-registry';
 import { createBazaarRouter } from '../bazaar/discovery';
 import { X402PaymentProof } from '../x402/types';
+import { HealthMonitorService } from '../services/health-monitor.service';
 import { x402ExpressMiddleware } from '../x402/middleware';
 
 export class AgentCommerceMCPServer {
   private server: Server;
   private app: express.Application;
+  private healthMonitor: HealthMonitorService;
 
   constructor() {
+    this.healthMonitor = new HealthMonitorService();
     this.server = new Server(
       {
         name: process.env.MCP_SERVER_NAME || 'gemini-agent-commerce-suite',
@@ -28,6 +31,7 @@ export class AgentCommerceMCPServer {
     );
 
     this.app = express();
+    this.app.use(express.json());
     this.setupMiddleware();
     this.setupHandlers();
     this.setupHttpEndpoints();
@@ -115,17 +119,21 @@ export class AgentCommerceMCPServer {
 
   private setupHttpEndpoints() {
     // Railway Container Health Probes & Monitoring Handler
-    const healthHandler = (_req: express.Request, res: express.Response) => {
-      res.status(200).json({
-        status: 'ok',
+    const healthHandler = async (_req: express.Request, res: express.Response) => {
+      const deepReport = await this.healthMonitor.getDeepHealthDiagnostics();
+      const statusCode = deepReport.overallStatus === 'CRITICAL_FAIL' ? 503 : 200;
+
+      res.status(statusCode).json({
+        status: deepReport.overallStatus === 'CRITICAL_FAIL' ? 'critical_failure' : 'ok',
+        overallStatus: deepReport.overallStatus,
         uptime: Math.floor(process.uptime()),
         timestamp: new Date().toISOString(),
         version: '1.0.0',
         environment: process.env.NODE_ENV || 'production',
         targetNetwork: 'base-mainnet',
         serverName: process.env.MCP_SERVER_NAME || 'gemini-agent-commerce-suite',
-        merchantPaymentAddress: process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
         activeToolsCount: DynamicToolRegistry.getAllTools().length,
+        dependencies: deepReport,
         services: {
           bazaarDiscovery: 'healthy',
           x402Protocol: 'healthy',
@@ -168,6 +176,24 @@ export class AgentCommerceMCPServer {
     // Primary Gemini & MCP Tool Execution Endpoint
     const handleToolCall = async (req: express.Request, res: express.Response) => {
       try {
+        // Enforce CRITICAL dependency health check (Redis 503 & Base RPC failover)
+        const health = await this.healthMonitor.getDeepHealthDiagnostics();
+        if (health.redis.configured && !health.redis.healthy) {
+          res.status(503).json({
+            error: 'CRITICAL: Redis PING check failed. Rejecting tool execution to prevent state corruption.',
+            details: health.redis,
+          });
+          return;
+        }
+
+        if (!health.baseRpc.healthy) {
+          res.status(503).json({
+            error: 'CRITICAL: All Base RPC endpoints failed eth_chainId check.',
+            details: health.baseRpc,
+          });
+          return;
+        }
+
         const { tool, arguments: toolArgs, paymentProof } = req.body;
         const toolName = tool || req.body?.function || req.body?.name;
         const toolDef = DynamicToolRegistry.getTool(toolName);
