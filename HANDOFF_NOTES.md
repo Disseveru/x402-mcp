@@ -15,40 +15,44 @@ This project (`x402-mcp`) is an **Autonomous Seller MCP Platform & Service Facto
 
 ---
 
-## 2. DEEP DEPENDENCY-LEVEL RESILIENCE & FACT-CHECKING (MANDATORY)
+## 2. Railway Deployment & CLI Configuration (CRITICAL FOR AGENTS)
 
-- 🔴 **DEEP DEPENDENCY RESILIENCE ALWAYS**: Surface-level container health checks are INSUFFICIENT. All infrastructure features MUST implement deep, dependency-level health probes and active failover:
-  - **Base RPC (CRITICAL)**: Test `eth_chainId` (8453). Auto-failover across backup pool (`mainnet.base.org`, `llamarpc`, `1rpc`, `drpc`).
-  - **Redis (CRITICAL)**: Test `PING`. If down, reject incoming tool calls with **HTTP 503 Service Unavailable** to prevent nonce replay attacks.
-  - **Postgres (HIGH)**: Connection query (`SELECT 1`) test with **3x exponential backoff retries** (100ms -> 300ms -> 900ms) before flagging degraded.
-- 🔴 **FACT-CHECK & DOUBLE-CHECK EVERYTHING**: Every agent must audit and verify live HTTP status codes, headers, and failover behavior before marking any task as complete.
+- 🟢 **Live Production Domain**: [https://x402-mcp-production.up.railway.app](https://x402-mcp-production.up.railway.app)
+- 🟢 **Health Check**: [https://x402-mcp-production.up.railway.app/health](https://x402-mcp-production.up.railway.app/health)
+- 🟢 **Bazaar Discovery Specification**: [https://x402-mcp-production.up.railway.app/.well-known/bazaar.json](https://x402-mcp-production.up.railway.app/.well-known/bazaar.json)
+- 🟢 **Railway Account**: Erick Rosas (`mrmousers91@gmail.com`)
+- 🟢 **Workspace**: `Erick Rosas's Projects`
+- 🟢 **Project Name**: `x402 Commerce` (`cd71c5bb-d918-4ca8-9c6f-a1c8667bb31d`)
+- 🟢 **Linked Service**: `x402-mcp` (`3141076d-315d-47f8-9fed-2a18480cec44`)
+
+> ⚠️ **CRITICAL WARNING FOR FUTURE AGENTS ON RAILWAY CLI AUTHENTICATION**:
+> - DO NOT set invalid UUIDs or random tokens into Windows User Environment Variables (`RAILWAY_TOKEN` or `RAILWAY_API_TOKEN`). Setting invalid environment variables overrides CLI login credentials and breaks all `railway` commands with `Unauthorized / Invalid RAILWAY_TOKEN`.
+> - If `railway` commands fail with `Unauthorized`, ALWAYS run this cleanup in PowerShell first:
+>   ```powershell
+>   Remove-Item Env:\RAILWAY_TOKEN -ErrorAction SilentlyContinue
+>   Remove-Item Env:\RAILWAY_API_TOKEN -ErrorAction SilentlyContinue
+>   [Environment]::SetEnvironmentVariable("RAILWAY_TOKEN", $null, "User")
+>   [Environment]::SetEnvironmentVariable("RAILWAY_API_TOKEN", $null, "User")
+>   ```
+> - To re-authenticate if session ever expires, run `railway login --browserless` or `railway login`.
 
 ---
 
-## 3. STRICT SECURITY & PRIVACY DIRECTIVES (CRITICAL)
+## 3. Current Live Services (9 Total)
 
-- 🔴 **NEVER COMMIT WALLET ADDRESSES OR SECRETS TO GIT**: Real wallet addresses, API keys, and HMAC secrets MUST NEVER be placed in tracked Git files (`manifest.json`, source code, or commit messages).
-- 🟢 **LOCAL `.env` ISOLATION**: Real credentials belong strictly in the git-ignored local `.env` file. Tracked files (`.env.example`, `manifest.json`) MUST ONLY contain generic placeholders like `"0xMERCHANT_WALLET_ADDRESS"`.
-- 🟢 **DYNAMIC RUNTIME LOADING**: Code ([`bazaar/catalog.ts`](file:///C:/Users/mrmou/.gemini/antigravity/scratch/x402-mcp/bazaar/catalog.ts)) dynamically injects `process.env.MERCHANT_PAYMENT_ADDRESS` at runtime.
-- 🟢 **PRE-COMMIT AUDIT**: Before executing `git commit` or `git push`, ALWAYS run `git status` and `git grep` to verify no wallet address or secret is tracked.
-
----
-
-## 4. Current Live Services (9 Total)
-
-1. `agent_context_firewall` (`$0.10 USD`) - Sanitizes incoming data payloads for prompt injections and jailbreaks.
-2. `agent_execution_proof_attestor` (`$0.15 USD`) - Cryptographic Proof-of-Useful-Work trace attestation.
+1. `agent_context_firewall` (`$0.40 USD`) - Sanitizes incoming data payloads for prompt injections and jailbreaks.
+2. `agent_execution_proof_attestor` (`$0.35 USD`) - Cryptographic Proof-of-Useful-Work trace attestation.
 3. `x402_atomic_pipeline_router` (`$0.25 USD`) - Orchestrates multi-agent dependency DAGs with a single atomic payment.
-4. `agent_sla_micro_insurance` (`$0.05 USD`) - Locks micro-bonds for seller tools with auto-refund on SLA breach (>300ms).
-5. `agent_code_security_auditor` (`$1.50 USD`) - Vulnerability scanning on agent code payloads.
-6. `liquidity_arbitrage_predictor` (`$0.75 USD`) - Real-time DEX/CEX order book spread predictor.
+4. `agent_sla_micro_insurance` (`$0.50 USD`) - Locks micro-bonds for seller tools with auto-refund on SLA breach (>300ms).
+5. `agent_code_security_auditor` (`$0.75 USD`) - Vulnerability scanning on agent code payloads.
+6. `liquidity_arbitrage_predictor` (`$0.60 USD`) - Real-time DEX/CEX order book spread predictor.
 7. `agent_escrow_service` (`$0.25 USD`) - Multi-sig conditional trade escrow contract.
 8. `market_data_insights` (`$0.50 USD`) - Institutional quantitative market metrics & sentiment.
 9. `agent_task_executor` (`$1.00 USD`) - Isolated compute sandbox execution.
 
 ---
 
-## 5. Key Execution Commands
+## 4. Key Execution Commands
 
 ```bash
 # Build TypeScript project (Must compile with 0 errors)
@@ -60,6 +64,12 @@ npm run scan-and-create
 # Run 12-Hour Automated Scanner Daemon
 npm run seller-daemon
 
-# Run Local DeepSeek Buyer Simulation
-npm run deepseek
+# Check Railway project status
+railway status
+
+# View live Railway logs
+railway logs
+
+# SSH into Railway container
+railway ssh
 ```
