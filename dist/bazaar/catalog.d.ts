@@ -4,6 +4,6 @@ export interface CapabilityQuery {
     keyword?: string;
 }
 export declare class BazaarCatalog {
-    static getManifest(): any;
-    static searchCapabilities(query: CapabilityQuery): any;
+    static getManifest(): Promise<any>;
+    static searchCapabilities(query: CapabilityQuery): Promise<any>;
 }

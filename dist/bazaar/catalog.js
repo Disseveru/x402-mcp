@@ -1,20 +1,22 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BazaarCatalog = void 0;
-const manifest_json_1 = __importDefault(require("./manifest.json"));
+const manifest_manager_1 = require("./manifest-manager");
 class BazaarCatalog {
-    static getManifest() {
-        const cloned = JSON.parse(JSON.stringify(manifest_json_1.default));
+    static async getManifest() {
+        const rawManifest = await manifest_manager_1.BazaarManifestManager.getManifest();
+        const cloned = JSON.parse(JSON.stringify(rawManifest));
         if (process.env.MERCHANT_PAYMENT_ADDRESS) {
+            if (!cloned.provider)
+                cloned.provider = {};
             cloned.provider.paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS;
         }
         return cloned;
     }
-    static searchCapabilities(query) {
-        const activeManifest = this.getManifest();
+    static async searchCapabilities(query) {
+        const activeManifest = await this.getManifest();
+        if (!activeManifest.capabilities)
+            return [];
         return activeManifest.capabilities.filter((cap) => {
             if (query.category && cap.category !== query.category) {
                 return false;

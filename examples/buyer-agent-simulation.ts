@@ -25,7 +25,7 @@ async function runEndToEndSimulation() {
 
     // 3. Discover capabilities via Bazaar Catalog
     console.log('\n--- STEP 1: DISCOVERING CAPABILITIES VIA BAZAAR PROTOCOL ---');
-    const manifest = BazaarCatalog.getManifest();
+    const manifest = await BazaarCatalog.getManifest();
     console.log(`[Bazaar Provider] ${manifest.provider.name} - ${manifest.provider.description}`);
     console.log(`[Bazaar Payment Address] ${manifest.provider.paymentAddress}`);
     console.log(`[Bazaar Capabilities Found]: ${manifest.capabilities.length} tools`);

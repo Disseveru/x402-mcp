@@ -5,15 +5,15 @@ export function createBazaarRouter() {
   const router = express.Router();
 
   // Well-known Bazaar protocol endpoint
-  router.get('/.well-known/bazaar.json', (_req, res) => {
+  router.get('/.well-known/bazaar.json', async (_req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.json(BazaarCatalog.getManifest());
+    res.json(await BazaarCatalog.getManifest());
   });
 
   // Capability search API
-  router.get('/bazaar/search', (req, res) => {
+  router.get('/bazaar/search', async (req, res) => {
     const { category, maxPriceUSD, keyword } = req.query;
-    const results = BazaarCatalog.searchCapabilities({
+    const results = await BazaarCatalog.searchCapabilities({
       category: category as string,
       maxPriceUSD: maxPriceUSD ? parseFloat(maxPriceUSD as string) : undefined,
       keyword: keyword as string,

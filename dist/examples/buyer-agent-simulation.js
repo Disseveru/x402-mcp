@@ -22,7 +22,7 @@ async function runEndToEndSimulation() {
         console.log('[Health Probe Output]:', JSON.stringify(healthData, null, 2));
         // 3. Discover capabilities via Bazaar Catalog
         console.log('\n--- STEP 1: DISCOVERING CAPABILITIES VIA BAZAAR PROTOCOL ---');
-        const manifest = catalog_1.BazaarCatalog.getManifest();
+        const manifest = await catalog_1.BazaarCatalog.getManifest();
         console.log(`[Bazaar Provider] ${manifest.provider.name} - ${manifest.provider.description}`);
         console.log(`[Bazaar Payment Address] ${manifest.provider.paymentAddress}`);
         console.log(`[Bazaar Capabilities Found]: ${manifest.capabilities.length} tools`);

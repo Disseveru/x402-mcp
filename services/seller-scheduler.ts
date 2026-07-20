@@ -22,7 +22,7 @@ export class SellerEcosystemScheduler {
     console.log('========================================================================\n');
 
     // 1. Fetch current registered tool names
-    const manifest = BazaarManifestManager.getManifest();
+    const manifest = await BazaarManifestManager.getManifest();
     const existingToolNames = manifest.capabilities.map((c: any) => c.name);
 
     console.log(`[Market Scanner] Scanning x402 seller ecosystem demand...`);

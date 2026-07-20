@@ -113,7 +113,7 @@ export class ${className} {
     });
 
     // 4. Update Bazaar Catalog Manifest
-    BazaarManifestManager.registerCapability({
+    await BazaarManifestManager.registerCapability({
       id: blueprint.id,
       name: blueprint.toolName,
       description: blueprint.description,

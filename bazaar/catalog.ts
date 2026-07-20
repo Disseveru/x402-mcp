@@ -1,4 +1,4 @@
-import manifest from './manifest.json';
+import { BazaarManifestManager } from './manifest-manager';
 
 export interface CapabilityQuery {
   category?: string;
@@ -7,16 +7,20 @@ export interface CapabilityQuery {
 }
 
 export class BazaarCatalog {
-  public static getManifest() {
-    const cloned = JSON.parse(JSON.stringify(manifest));
+  public static async getManifest() {
+    const rawManifest = await BazaarManifestManager.getManifest();
+    const cloned = JSON.parse(JSON.stringify(rawManifest));
     if (process.env.MERCHANT_PAYMENT_ADDRESS) {
+      if (!cloned.provider) cloned.provider = {};
       cloned.provider.paymentAddress = process.env.MERCHANT_PAYMENT_ADDRESS;
     }
     return cloned;
   }
 
-  public static searchCapabilities(query: CapabilityQuery) {
-    const activeManifest = this.getManifest();
+  public static async searchCapabilities(query: CapabilityQuery) {
+    const activeManifest = await this.getManifest();
+    if (!activeManifest.capabilities) return [];
+    
     return activeManifest.capabilities.filter((cap: any) => {
       if (query.category && cap.category !== query.category) {
         return false;
