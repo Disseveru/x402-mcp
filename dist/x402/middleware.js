@@ -93,12 +93,11 @@ function x402ExpressMiddleware(verifier = verifier_1.defaultVerifier) {
                 return next();
             }
         }
-        // Unauthenticated request -> Return 402 Payment Required for discovery
         const toolName = req.body?.tool ||
             req.body?.function ||
             req.body?.name ||
             req.query?.tool ||
-            'market_data_insights';
+            'generic_mcp_endpoint';
         const price = {
             amount: 50,
             currency: 'USD_CENT',
@@ -126,7 +125,11 @@ function validateOrChallengeX402(toolName, price, paymentProof, verifier = verif
     if (paymentProof) {
         const verification = verifier.verifyProof(paymentProof);
         if (verification.valid && verification.receipt) {
-            return { success: true, receipt: verification.receipt };
+            const receipt = verification.receipt;
+            // Ensure the payment matches the required amount and currency
+            if (receipt.amountPaid.amount >= price.amount && receipt.amountPaid.currency === price.currency) {
+                return { success: true, receipt };
+            }
         }
     }
     const challenge = verifier.createChallenge(toolName, price);

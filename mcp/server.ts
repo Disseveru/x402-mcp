@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
-import { MCP_TOOLS } from './tools';
+import { DynamicToolRegistry } from './dynamic-registry';
 import { createBazaarRouter } from '../bazaar/discovery';
 import { X402PaymentProof } from '../x402/types';
 import { x402ExpressMiddleware } from '../x402/middleware';
@@ -65,7 +65,7 @@ export class AgentCommerceMCPServer {
   private setupHandlers() {
     // List Tools Handler
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      const tools = Object.values(MCP_TOOLS).map(t => ({
+      const tools = DynamicToolRegistry.getAllTools().map(t => ({
         name: t.name,
         description: `${t.description} [Price: ${t.priceFormatted}]`,
         inputSchema: t.inputSchema,
@@ -76,7 +76,7 @@ export class AgentCommerceMCPServer {
     // Call Tool Handler
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
-      const toolDef = MCP_TOOLS[name];
+      const toolDef = DynamicToolRegistry.getTool(name);
 
       if (!toolDef) {
         throw new Error(`Tool '${name}' not found in Gemini Agent Commerce Suite`);
@@ -125,7 +125,7 @@ export class AgentCommerceMCPServer {
         targetNetwork: 'base-mainnet',
         serverName: process.env.MCP_SERVER_NAME || 'gemini-agent-commerce-suite',
         merchantPaymentAddress: process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-        activeToolsCount: Object.keys(MCP_TOOLS).length,
+        activeToolsCount: DynamicToolRegistry.getAllTools().length,
         services: {
           bazaarDiscovery: 'healthy',
           x402Protocol: 'healthy',
@@ -152,8 +152,8 @@ export class AgentCommerceMCPServer {
             tools: '/gemini/v1/tools',
             execute: '/gemini/v1/call',
           },
-          toolsCount: Object.keys(MCP_TOOLS).length,
-          activeTools: Object.keys(MCP_TOOLS),
+          toolsCount: DynamicToolRegistry.getAllTools().length,
+          activeTools: DynamicToolRegistry.getAllTools().map(t => t.name),
         });
       }
     });
@@ -170,7 +170,7 @@ export class AgentCommerceMCPServer {
       try {
         const { tool, arguments: toolArgs, paymentProof } = req.body;
         const toolName = tool || req.body?.function || req.body?.name;
-        const toolDef = MCP_TOOLS[toolName];
+        const toolDef = DynamicToolRegistry.getTool(toolName);
 
         if (!toolDef) {
           res.status(404).json({ error: `Tool ${toolName} not found in Gemini Suite` });
@@ -205,7 +205,7 @@ export class AgentCommerceMCPServer {
 
     // Gemini Tool Declarations API
     const handleListTools = (_req: express.Request, res: express.Response) => {
-      const tools = Object.values(MCP_TOOLS).map(t => ({
+      const tools = DynamicToolRegistry.getAllTools().map(t => ({
         name: t.name,
         description: t.description,
         price: t.priceFormatted,

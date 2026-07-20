@@ -9,6 +9,9 @@ export class X402Verifier {
 
   constructor(secretKey?: string, payeeAddress?: string) {
     this.secretKey = secretKey || process.env.X402_SECRET_KEY || 'agent_commerce_suite_secp256k1_hmac_secret_2026';
+    if (process.env.NODE_ENV === 'production' && !process.env.X402_SECRET_KEY) {
+      throw new Error('FATAL: X402_SECRET_KEY environment variable is missing in production');
+    }
     this.payeeAddress = payeeAddress || process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
   }
 
@@ -84,17 +87,18 @@ export class X402Verifier {
     const expectedSigPayload = `${proof.invoiceId}:${proof.payerAddress}:${proof.paymentHash}:${proof.nonce}`;
     const expectedSignature = crypto.createHmac('sha256', this.secretKey).update(expectedSigPayload).digest('hex');
 
-    // Also support valid pre-signed wallet proofs where signature is signed with payer key
-    const isValidHmac = crypto.timingSafeEqual(
-      Buffer.from(proof.signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
-    );
+    let isValidHmac = false;
+    try {
+      isValidHmac = crypto.timingSafeEqual(
+        Buffer.from(proof.signature, 'hex'),
+        Buffer.from(expectedSignature, 'hex')
+      );
+    } catch (e) {
+      return { valid: false, error: 'Invalid signature format' };
+    }
 
-    if (!isValidHmac && proof.signature !== `sig_${proof.payerAddress}_${proof.invoiceId}`) {
-      // Fallback for simulation / standard agent-wallet proofs
-      if (!proof.signature.startsWith('sig_')) {
-        return { valid: false, error: 'Invalid cryptographic signature in payment proof' };
-      }
+    if (!isValidHmac) {
+      return { valid: false, error: 'Invalid cryptographic signature in payment proof' };
     }
 
     // Settlement success: Issue official receipt
