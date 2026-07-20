@@ -5,9 +5,15 @@ export interface X402Request extends Request {
     x402Receipt?: X402Receipt;
 }
 /**
- * Express Middleware enforcing HTTP 402 Payment Required for API endpoints
+ * Express Middleware enforcing HTTP 402 Payment Required for API endpoints.
+ * MUST be executed before any auth middleware so unauthenticated requests receive 402 for x402 discovery.
  */
 export declare function requireX402Payment(toolName: string, price: X402Price, verifier?: X402Verifier): (req: X402Request, res: Response, next: NextFunction) => void;
+/**
+ * Universal x402 Express Middleware that runs BEFORE any auth middleware.
+ * Returns HTTP 402 for unauthenticated requests.
+ */
+export declare function x402ExpressMiddleware(verifier?: X402Verifier): (req: X402Request, res: Response, next: NextFunction) => void;
 /**
  * Programmatic check for MCP Tools / non-HTTP RPC execution
  */

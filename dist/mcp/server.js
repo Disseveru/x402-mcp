@@ -10,6 +10,7 @@ const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
 const express_1 = __importDefault(require("express"));
 const tools_1 = require("./tools");
 const discovery_1 = require("../bazaar/discovery");
+const middleware_1 = require("../x402/middleware");
 class AgentCommerceMCPServer {
     server;
     app;
@@ -137,18 +138,21 @@ class AgentCommerceMCPServer {
         });
         // Attach Bazaar Discovery Endpoints
         this.app.use('/', (0, discovery_1.createBazaarRouter)());
+        // x402 Middleware MUST run BEFORE any auth middleware or tool handler
+        // Returns HTTP 402 for unauthenticated requests
+        const x402Middleware = (0, middleware_1.x402ExpressMiddleware)();
         // Primary Gemini & MCP Tool Execution Endpoint
         const handleToolCall = async (req, res) => {
             try {
                 const { tool, arguments: toolArgs, paymentProof } = req.body;
-                const toolName = tool || req.body.function || req.body.name;
+                const toolName = tool || req.body?.function || req.body?.name;
                 const toolDef = tools_1.MCP_TOOLS[toolName];
                 if (!toolDef) {
                     res.status(404).json({ error: `Tool ${toolName} not found in Gemini Suite` });
                     return;
                 }
                 const proof = paymentProof || toolArgs?.paymentProof;
-                const result = await toolDef.handler(toolArgs || req.body.parameters || {}, proof);
+                const result = await toolDef.handler(toolArgs || req.body?.parameters || {}, proof);
                 if (result.status === 402) {
                     const challengePayload = result.challenge || result;
                     const encodedChallenge = Buffer.from(JSON.stringify(challengePayload)).toString('base64');
@@ -165,8 +169,11 @@ class AgentCommerceMCPServer {
                 res.status(500).json({ error: err.message || 'Internal Gemini MCP server error' });
             }
         };
-        this.app.post('/gemini/v1/call', handleToolCall);
-        this.app.post('/mcp/v1/call', handleToolCall);
+        // Mount x402 middleware BEFORE tool handlers for unauthenticated 402 discoverability
+        this.app.all('/gemini/v1/call', x402Middleware, handleToolCall);
+        this.app.all('/mcp/v1/call', x402Middleware, handleToolCall);
+        this.app.all('/mcp', x402Middleware, handleToolCall);
+        this.app.all('/call', x402Middleware, handleToolCall);
         // Gemini Tool Declarations API
         const handleListTools = (_req, res) => {
             const tools = Object.values(tools_1.MCP_TOOLS).map(t => ({
