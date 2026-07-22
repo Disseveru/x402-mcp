@@ -6,9 +6,11 @@ export declare class X402Verifier {
     private activeChallenges;
     constructor(secretKey?: string, payeeAddress?: string);
     /**
-     * Generate an HTTP 402 Payment Challenge for a monetized service
+     * Generate an HTTP 402 Payment Challenge for a monetized service (x402 v2 protocol)
      */
-    createChallenge(toolName: string, price: X402Price): X402PaymentChallenge;
+    createChallenge(toolName: string, price: X402Price, options?: {
+        isValidator?: boolean;
+    }): X402PaymentChallenge;
     /**
      * Verify an incoming X402PaymentProof sent by an agent
      */

@@ -26,7 +26,8 @@ export class ProofAttestorService {
     const attestationId = `att_${crypto.randomBytes(6).toString('hex')}`;
     const payloadStr = JSON.stringify(input.stepData || {});
     const merkleRoot = `0x${crypto.createHash('sha256').update(payloadStr).digest('hex')}`;
-    const signature = `0x${crypto.randomBytes(65).toString('hex')}`;
+    const secretKey = process.env.X402_SECRET_KEY || 'default_secret';
+    const signature = `0x${crypto.createHmac('sha256', secretKey).update(merkleRoot).digest('hex')}`;
 
     return {
       attestationId,

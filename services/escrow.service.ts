@@ -1,5 +1,9 @@
 import { X402Price } from '../x402/types';
 import * as crypto from 'crypto';
+import Redis from 'ioredis';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export interface EscrowContractInput {
   buyerAgent: string;
@@ -29,7 +33,22 @@ export class EscrowService {
     formatted: '$0.25 USD',
   };
 
-  private escrows: Map<string, EscrowContractState> = new Map();
+  private redis: Redis | null = null;
+  private useMemoryFallback = false;
+  private escrowsFallback = new Map<string, EscrowContractState>();
+
+  constructor() {
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      this.redis = new Redis(redisUrl);
+      this.redis.on('error', (err) => {
+        console.error('Redis error in EscrowService:', err);
+      });
+    } else {
+      this.useMemoryFallback = true;
+      console.warn('REDIS_URL not set. EscrowService will use in-memory fallback.');
+    }
+  }
 
   public async createEscrow(input: EscrowContractInput): Promise<EscrowContractState> {
     const escrowId = `esc_${crypto.randomBytes(6).toString('hex')}`;
@@ -48,12 +67,18 @@ export class EscrowService {
       fundingTxHash: `0x${crypto.randomBytes(32).toString('hex')}`,
     };
 
-    this.escrows.set(escrowId, escrow);
+    if (this.redis && !this.useMemoryFallback) {
+      await this.redis.set(`escrow:${escrowId}`, JSON.stringify(escrow));
+    } else {
+      this.escrowsFallback.set(escrowId, escrow);
+    }
+    
     return escrow;
   }
 
   public async releaseEscrow(escrowId: string, proofOfDelivery: string): Promise<EscrowContractState> {
-    const escrow = this.escrows.get(escrowId);
+    const escrow = await this.getEscrow(escrowId);
+    
     if (!escrow) {
       throw new Error(`Escrow with ID ${escrowId} not found`);
     }
@@ -62,13 +87,30 @@ export class EscrowService {
       throw new Error(`Escrow cannot be released from status: ${escrow.status}`);
     }
 
+    if (!proofOfDelivery || proofOfDelivery.trim() === '') {
+      throw new Error('Invalid proof of delivery');
+    }
+
     escrow.status = 'SETTLED';
     escrow.settlementProof = proofOfDelivery;
-    this.escrows.set(escrowId, escrow);
+    
+    if (this.redis && !this.useMemoryFallback) {
+      await this.redis.set(`escrow:${escrowId}`, JSON.stringify(escrow));
+    } else {
+      this.escrowsFallback.set(escrowId, escrow);
+    }
+    
     return escrow;
   }
 
-  public getEscrow(escrowId: string): EscrowContractState | undefined {
-    return this.escrows.get(escrowId);
+  public async getEscrow(escrowId: string): Promise<EscrowContractState | undefined> {
+    if (this.redis && !this.useMemoryFallback) {
+      const data = await this.redis.get(`escrow:${escrowId}`);
+      if (data) {
+        return JSON.parse(data) as EscrowContractState;
+      }
+      return undefined;
+    }
+    return this.escrowsFallback.get(escrowId);
   }
 }

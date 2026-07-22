@@ -48,17 +48,18 @@ class X402Verifier {
         this.payeeAddress = payeeAddress || process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
     }
     /**
-     * Generate an HTTP 402 Payment Challenge for a monetized service
+     * Generate an HTTP 402 Payment Challenge for a monetized service (x402 v2 protocol)
      */
-    createChallenge(toolName, price) {
+    createChallenge(toolName, price, options) {
         const invoiceId = `inv_${crypto.randomBytes(8).toString('hex')}`;
         const nonce = crypto.randomBytes(16).toString('hex');
         const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes expiration
         const payloadToHash = `${invoiceId}:${toolName}:${price.amount}:${price.currency}:${nonce}:${expiresAt}`;
         const challengeHash = crypto.createHmac('sha256', this.secretKey).update(payloadToHash).digest('hex');
+        const isValidator = options?.isValidator || false;
         const challenge = {
             protocol: 'x402',
-            version: '1.0',
+            version: '2.0',
             invoiceId,
             toolName,
             payeeAddress: this.payeeAddress,
@@ -66,12 +67,13 @@ class X402Verifier {
             expiresAt,
             nonce,
             challengeHash,
+            ...(isValidator ? { validatorMode: true } : {}),
             paymentMethods: [
                 {
                     type: 'agent-wallet',
                     endpoint: '/x402/pay',
                     details: {
-                        network: process.env.X402_NETWORK || 'mainnet',
+                        network: process.env.X402_NETWORK || 'base-mainnet',
                         token: price.currency,
                     },
                 },

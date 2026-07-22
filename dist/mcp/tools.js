@@ -9,6 +9,12 @@ const arbitrage_predictor_service_1 = require("../services/arbitrage-predictor.s
 const context_firewall_service_1 = require("../services/context-firewall.service");
 const proof_attestor_service_1 = require("../services/proof-attestor.service");
 const sla_insurance_service_1 = require("../services/sla-insurance.service");
+const trust_oracle_service_1 = require("../services/trust-oracle.service");
+const context_vault_service_1 = require("../services/context-vault.service");
+const consensus_oracle_service_1 = require("../services/consensus-oracle.service");
+const zero_knowledge_trust_service_1 = require("../services/zero-knowledge-trust.service");
+const ephemeral_context_vault_service_1 = require("../services/ephemeral-context-vault.service");
+const hallucination_consensus_service_1 = require("../services/hallucination-consensus.service");
 const middleware_1 = require("../x402/middleware");
 const dataService = new data_insights_service_1.DataInsightsService();
 const executorService = new agent_executor_service_1.AgentExecutorService();
@@ -18,6 +24,12 @@ const arbitragePredictorService = new arbitrage_predictor_service_1.ArbitragePre
 const contextFirewallService = new context_firewall_service_1.ContextFirewallService();
 const proofAttestorService = new proof_attestor_service_1.ProofAttestorService();
 const slaInsuranceService = new sla_insurance_service_1.SLAInsuranceService();
+const trustOracleService = new trust_oracle_service_1.AgentTrustOracleService();
+const contextVaultService = new context_vault_service_1.AgentContextVaultService();
+const consensusOracleService = new consensus_oracle_service_1.AgentConsensusOracleService();
+const zeroKnowledgeTrustOracleService = new zero_knowledge_trust_service_1.ZeroKnowledgeTrustOracleService();
+const ephemeralContextVaultService = new ephemeral_context_vault_service_1.EphemeralContextVaultService();
+const hallucinationConsensusOracleService = new hallucination_consensus_service_1.HallucinationConsensusOracleService();
 exports.MCP_TOOLS = {
     market_data_insights: {
         name: 'market_data_insights',
@@ -276,6 +288,172 @@ exports.MCP_TOOLS = {
                     },
                     providerNode: 'seller-service-factory:auto-node-v1',
                 },
+            };
+        },
+    },
+    agent_trust_oracle: {
+        name: 'agent_trust_oracle',
+        description: 'Calculates real-time agent reputation scores, SLA compliance, prompt injection threat levels, and settled volume. Requires $0.35 USD fee.',
+        priceFormatted: trust_oracle_service_1.AgentTrustOracleService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                agentId: { type: 'string', description: 'Target agent ID or wallet address to query' },
+                timeWindowDays: { type: 'number', description: 'Analytical window in days (default 30)' },
+                forceRecalculate: { type: 'boolean', description: 'Force recalculation bypassing cache' },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['agentId'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_trust_oracle', trust_oracle_service_1.AgentTrustOracleService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await trustOracleService.getTrustMetrics(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
+            };
+        },
+    },
+    agent_context_vault: {
+        name: 'agent_context_vault',
+        description: 'Encrypted time-to-live (TTL) shared memory vault for multi-agent swarms. Requires $0.25 USD fee.',
+        priceFormatted: context_vault_service_1.AgentContextVaultService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                swarmId: { type: 'string', description: 'Swarm identifier' },
+                key: { type: 'string', description: 'Secret storage key' },
+                value: { description: 'Payload object or secret to store' },
+                writerAgentId: { type: 'string', description: 'Agent ID storing the secret' },
+                ttlSeconds: { type: 'number', description: 'Expiration in seconds (default 3600)' },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['swarmId', 'key', 'value', 'writerAgentId'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_context_vault', context_vault_service_1.AgentContextVaultService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await contextVaultService.storeSecret(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
+            };
+        },
+    },
+    agent_consensus_oracle: {
+        name: 'agent_consensus_oracle',
+        description: 'Multi-model semantic sanity & hallucination auditor for structured JSON payloads. Requires $0.85 USD fee.',
+        priceFormatted: consensus_oracle_service_1.AgentConsensusOracleService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                payload: { type: 'object', description: 'Structured JSON payload to audit' },
+                expectedSchema: { type: 'object', description: 'Optional expected schema mapping field -> type' },
+                domainContext: { type: 'string', enum: ['FINANCIAL', 'CODE', 'LEGAL', 'METRICS', 'GENERAL'] },
+                strictness: { type: 'string', enum: ['STANDARD', 'STRICT', 'PARANOID'] },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['payload'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_consensus_oracle', consensus_oracle_service_1.AgentConsensusOracleService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await consensusOracleService.auditConsensus(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
+            };
+        },
+    },
+    agent_zero_knowledge_trust_oracle: {
+        name: 'agent_zero_knowledge_trust_oracle',
+        description: 'Verifies zero-knowledge trust proofs, agent identity claims, and reputation attestations without disclosing underlying private model weights or credentials. Requires $0.005 USD fee.',
+        priceFormatted: zero_knowledge_trust_service_1.ZeroKnowledgeTrustOracleService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                agentId: { type: 'string', description: 'Target agent ID or public key' },
+                proofType: { type: 'string', enum: ['identity', 'reputation', 'solvency', 'compliance'], description: 'Type of ZK proof' },
+                zkProofPayload: { type: 'string', description: 'Base64/JSON encoded zero-knowledge proof payload' },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['agentId', 'proofType', 'zkProofPayload'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_zero_knowledge_trust_oracle', zero_knowledge_trust_service_1.ZeroKnowledgeTrustOracleService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await zeroKnowledgeTrustOracleService.verifyProof(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
+            };
+        },
+    },
+    agent_ephemeral_context_vault: {
+        name: 'agent_ephemeral_context_vault',
+        description: 'Provides high-speed, temporary encrypted key-value context storage with auto-expiring TTL for inter-agent workflows. Requires $0.001 USD fee.',
+        priceFormatted: ephemeral_context_vault_service_1.EphemeralContextVaultService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                action: { type: 'string', enum: ['store', 'retrieve', 'delete'], description: 'Vault action' },
+                key: { type: 'string', description: 'Context vault key identifier' },
+                value: { type: 'string', description: 'Encrypted value content (required for store)' },
+                ttlSeconds: { type: 'number', description: 'Time-to-live in seconds (default 300)' },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['action', 'key'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_ephemeral_context_vault', ephemeral_context_vault_service_1.EphemeralContextVaultService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await ephemeralContextVaultService.handleVaultAction(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
+            };
+        },
+    },
+    agent_hallucination_consensus_oracle: {
+        name: 'agent_hallucination_consensus_oracle',
+        description: 'Cross-checks LLM response claims across a multi-node validator consensus network to detect hallucinations and factual drift. Requires $0.002 USD fee.',
+        priceFormatted: hallucination_consensus_service_1.HallucinationConsensusOracleService.PRICE.formatted,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                prompt: { type: 'string', description: 'Original prompt or query text' },
+                responseClaim: { type: 'string', description: 'Model output or claim to evaluate for hallucination' },
+                consensusThreshold: { type: 'number', description: 'Required consensus agreement ratio (0.5 to 1.0)' },
+                paymentProof: { type: 'object', description: 'x402 payment proof object' },
+            },
+            required: ['prompt', 'responseClaim'],
+        },
+        handler: async (args, paymentProof, verifier) => {
+            const gate = (0, middleware_1.validateOrChallengeX402)('agent_hallucination_consensus_oracle', hallucination_consensus_service_1.HallucinationConsensusOracleService.PRICE, paymentProof, verifier);
+            if (!gate.success) {
+                return gate;
+            }
+            const data = await hallucinationConsensusOracleService.evaluateConsensus(args);
+            return {
+                success: true,
+                receipt: gate.receipt,
+                data,
             };
         },
     },

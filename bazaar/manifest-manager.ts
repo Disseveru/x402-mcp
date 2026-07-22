@@ -23,29 +23,44 @@ export class BazaarManifestManager {
   private static REDIS_KEY = 'bazaar:manifest';
 
   public static async getManifest(): Promise<any> {
+    let parsed: any = null;
     if (this.redisClient) {
       try {
         const cached = await this.redisClient.get(this.REDIS_KEY);
         if (cached) {
-          return JSON.parse(cached);
+          parsed = JSON.parse(cached);
         }
       } catch (err) {
         console.error('[BazaarManifestManager] Failed to read from Redis', err);
       }
     }
     
-    // Fallback to local disk
-    try {
-      const raw = fs.readFileSync(this.manifestPath, 'utf-8');
-      const parsed = JSON.parse(raw);
-      // Sync to Redis if possible
-      if (this.redisClient) {
-        await this.redisClient.set(this.REDIS_KEY, JSON.stringify(parsed));
+    if (!parsed) {
+      try {
+        const raw = fs.readFileSync(this.manifestPath, 'utf-8');
+        parsed = JSON.parse(raw);
+        if (this.redisClient) {
+          await this.redisClient.set(this.REDIS_KEY, JSON.stringify(parsed));
+        }
+      } catch (e) {
+        parsed = { provider: {}, capabilities: [] };
       }
-      return parsed;
-    } catch (e) {
-      return { provider: {}, capabilities: [] }; // Fallback blank if missing
     }
+
+    const isFreeMode = process.env.X402_FREE_MODE !== 'false';
+    if (isFreeMode && parsed.capabilities) {
+      parsed.capabilities = parsed.capabilities.map((cap: any) => ({
+        ...cap,
+        paymentRequired: false,
+        price: {
+          amount: 0,
+          currency: 'USD_CENT',
+          formatted: '$0.00 FREE TIER',
+        },
+      }));
+    }
+
+    return parsed;
   }
 
   public static async registerCapability(newCapability: BazaarCapability): Promise<boolean> {

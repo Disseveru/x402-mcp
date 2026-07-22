@@ -32,16 +32,37 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EscrowService = void 0;
 const crypto = __importStar(require("crypto"));
+const ioredis_1 = __importDefault(require("ioredis"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 class EscrowService {
     static FEE_PRICE = {
         amount: 25,
         currency: 'USD_CENT',
         formatted: '$0.25 USD',
     };
-    escrows = new Map();
+    redis = null;
+    useMemoryFallback = false;
+    escrowsFallback = new Map();
+    constructor() {
+        const redisUrl = process.env.REDIS_URL;
+        if (redisUrl) {
+            this.redis = new ioredis_1.default(redisUrl);
+            this.redis.on('error', (err) => {
+                console.error('Redis error in EscrowService:', err);
+            });
+        }
+        else {
+            this.useMemoryFallback = true;
+            console.warn('REDIS_URL not set. EscrowService will use in-memory fallback.');
+        }
+    }
     async createEscrow(input) {
         const escrowId = `esc_${crypto.randomBytes(6).toString('hex')}`;
         const createdAt = Date.now();
@@ -57,24 +78,44 @@ class EscrowService {
             expiresAt,
             fundingTxHash: `0x${crypto.randomBytes(32).toString('hex')}`,
         };
-        this.escrows.set(escrowId, escrow);
+        if (this.redis && !this.useMemoryFallback) {
+            await this.redis.set(`escrow:${escrowId}`, JSON.stringify(escrow));
+        }
+        else {
+            this.escrowsFallback.set(escrowId, escrow);
+        }
         return escrow;
     }
     async releaseEscrow(escrowId, proofOfDelivery) {
-        const escrow = this.escrows.get(escrowId);
+        const escrow = await this.getEscrow(escrowId);
         if (!escrow) {
             throw new Error(`Escrow with ID ${escrowId} not found`);
         }
         if (escrow.status !== 'FUNDS_LOCKED') {
             throw new Error(`Escrow cannot be released from status: ${escrow.status}`);
         }
+        if (!proofOfDelivery || proofOfDelivery.trim() === '') {
+            throw new Error('Invalid proof of delivery');
+        }
         escrow.status = 'SETTLED';
         escrow.settlementProof = proofOfDelivery;
-        this.escrows.set(escrowId, escrow);
+        if (this.redis && !this.useMemoryFallback) {
+            await this.redis.set(`escrow:${escrowId}`, JSON.stringify(escrow));
+        }
+        else {
+            this.escrowsFallback.set(escrowId, escrow);
+        }
         return escrow;
     }
-    getEscrow(escrowId) {
-        return this.escrows.get(escrowId);
+    async getEscrow(escrowId) {
+        if (this.redis && !this.useMemoryFallback) {
+            const data = await this.redis.get(`escrow:${escrowId}`);
+            if (data) {
+                return JSON.parse(data);
+            }
+            return undefined;
+        }
+        return this.escrowsFallback.get(escrowId);
     }
 }
 exports.EscrowService = EscrowService;

@@ -16,9 +16,13 @@ export class X402Verifier {
   }
 
   /**
-   * Generate an HTTP 402 Payment Challenge for a monetized service
+   * Generate an HTTP 402 Payment Challenge for a monetized service (x402 v2 protocol)
    */
-  public createChallenge(toolName: string, price: X402Price): X402PaymentChallenge {
+  public createChallenge(
+    toolName: string,
+    price: X402Price,
+    options?: { isValidator?: boolean }
+  ): X402PaymentChallenge {
     const invoiceId = `inv_${crypto.randomBytes(8).toString('hex')}`;
     const nonce = crypto.randomBytes(16).toString('hex');
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes expiration
@@ -26,9 +30,11 @@ export class X402Verifier {
     const payloadToHash = `${invoiceId}:${toolName}:${price.amount}:${price.currency}:${nonce}:${expiresAt}`;
     const challengeHash = crypto.createHmac('sha256', this.secretKey).update(payloadToHash).digest('hex');
 
+    const isValidator = options?.isValidator || false;
+
     const challenge: X402PaymentChallenge = {
       protocol: 'x402',
-      version: '1.0',
+      version: '2.0',
       invoiceId,
       toolName,
       payeeAddress: this.payeeAddress,
@@ -36,12 +42,13 @@ export class X402Verifier {
       expiresAt,
       nonce,
       challengeHash,
+      ...(isValidator ? { validatorMode: true } : {}),
       paymentMethods: [
         {
           type: 'agent-wallet',
           endpoint: '/x402/pay',
           details: {
-            network: process.env.X402_NETWORK || 'mainnet',
+            network: process.env.X402_NETWORK || 'base-mainnet',
             token: price.currency,
           },
         },

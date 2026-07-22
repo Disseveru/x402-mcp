@@ -14,11 +14,11 @@
       "name": "market_data_insights",
       "description": "Fetches real-time institutional quantitative market metrics and sentiment data for Gemini agents.",
       "category": "market-intelligence",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 50,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.50 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "market_data_insights",
       "endpoint": "/gemini/v1/call"
@@ -28,11 +28,11 @@
       "name": "agent_task_executor",
       "description": "Executes remote sub-agent task payloads in an isolated secure sandbox for Gemini tasks.",
       "category": "compute-execution",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 100,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$1.00 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_task_executor",
       "endpoint": "/gemini/v1/call"
@@ -42,11 +42,11 @@
       "name": "agent_escrow_service",
       "description": "Creates and releases multi-sig conditional escrow contracts for Gemini agent-to-agent trades.",
       "category": "escrow-settlement",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 25,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.25 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_escrow_service",
       "endpoint": "/gemini/v1/call"
@@ -56,11 +56,11 @@
       "name": "agent_code_security_auditor",
       "description": "Performs static analysis and vulnerability scanning on agent code payloads before execution.",
       "category": "security-auditing",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 75,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.75 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_code_security_auditor",
       "endpoint": "/mcp/v1/call"
@@ -70,11 +70,11 @@
       "name": "liquidity_arbitrage_predictor",
       "description": "Scans DEX/CEX order books to identify real-time cross-chain arbitrage spreads.",
       "category": "quantitative-intelligence",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 60,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.60 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "liquidity_arbitrage_predictor",
       "endpoint": "/mcp/v1/call"
@@ -84,11 +84,11 @@
       "name": "agent_context_firewall",
       "description": "Sanitizes bought data streams and incoming API payloads for hidden prompt injections, jailbreaks, and context-poisoning attacks before agent ingestion.",
       "category": "security-infrastructure",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 40,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.40 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_context_firewall",
       "endpoint": "/mcp/v1/call"
@@ -98,11 +98,11 @@
       "name": "agent_execution_proof_attestor",
       "description": "Generates cryptographic step-telemetry and merkle execution trace commitments proving compute work was actually performed by seller agents.",
       "category": "execution-verification",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 35,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.35 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_execution_proof_attestor",
       "endpoint": "/mcp/v1/call"
@@ -112,11 +112,11 @@
       "name": "agent_sla_micro_insurance",
       "description": "Locks micro-bonds for seller tool calls. Automatically triggers instant buyer refunds and micro-penalties if seller latency exceeds SLA thresholds.",
       "category": "sla-guarantee",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 50,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.50 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "agent_sla_micro_insurance",
       "endpoint": "/mcp/v1/call"
@@ -126,13 +126,55 @@
       "name": "x402_atomic_pipeline_router",
       "description": "Orchestrates multi-agent dependency DAGs with a single atomic x402 payment that automatically fans out and settles across sub-agent nodes.",
       "category": "pipeline-orchestration",
-      "paymentRequired": true,
+      "paymentRequired": false,
       "price": {
-        "amount": 25,
+        "amount": 0,
         "currency": "USD_CENT",
-        "formatted": "$0.25 USD"
+        "formatted": "$0.00 FREE TIER"
       },
       "mcpTool": "x402_atomic_pipeline_router",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_zero_knowledge_trust_oracle",
+      "name": "agent_zero_knowledge_trust_oracle",
+      "description": "Verifies zero-knowledge trust proofs, agent identity claims, and reputation attestations without disclosing underlying private model weights or credentials.",
+      "category": "trust-verification",
+      "paymentRequired": true,
+      "price": {
+        "amount": 0.5,
+        "currency": "USD_CENT",
+        "formatted": "$0.005 USD"
+      },
+      "mcpTool": "agent_zero_knowledge_trust_oracle",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_ephemeral_context_vault",
+      "name": "agent_ephemeral_context_vault",
+      "description": "Provides high-speed, temporary encrypted key-value context storage with auto-expiring TTL for inter-agent workflows.",
+      "category": "ephemeral-storage",
+      "paymentRequired": true,
+      "price": {
+        "amount": 0.1,
+        "currency": "USD_CENT",
+        "formatted": "$0.001 USD"
+      },
+      "mcpTool": "agent_ephemeral_context_vault",
+      "endpoint": "/mcp/v1/call"
+    },
+    {
+      "id": "tool:agent_hallucination_consensus_oracle",
+      "name": "agent_hallucination_consensus_oracle",
+      "description": "Cross-checks LLM response claims across a multi-node validator consensus network to detect hallucinations and factual drift.",
+      "category": "fact-consensus",
+      "paymentRequired": true,
+      "price": {
+        "amount": 0.2,
+        "currency": "USD_CENT",
+        "formatted": "$0.002 USD"
+      },
+      "mcpTool": "agent_hallucination_consensus_oracle",
       "endpoint": "/mcp/v1/call"
     }
   ]

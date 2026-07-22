@@ -1,6 +1,6 @@
 /**
  * x402 Protocol Types - Agent-to-Agent Payment Standard
- * Implements HTTP 402 Payment Required spec for machine payments.
+ * Implements HTTP 402 Payment Required spec v2 for machine payments.
  */
 export interface X402Price {
     amount: number;
@@ -9,7 +9,7 @@ export interface X402Price {
 }
 export interface X402PaymentChallenge {
     protocol: 'x402';
-    version: '1.0';
+    version: '2.0' | '1.0';
     invoiceId: string;
     toolName: string;
     payeeAddress: string;
@@ -17,6 +17,7 @@ export interface X402PaymentChallenge {
     expiresAt: number;
     nonce: string;
     challengeHash: string;
+    validatorMode?: boolean;
     paymentMethods: Array<{
         type: 'lightning' | 'evm' | 'solana' | 'agent-wallet';
         endpoint: string;
@@ -48,3 +49,11 @@ export interface ServiceResponse<T = any> {
     error?: string;
     receipt?: X402Receipt;
 }
+/**
+ * Format helper for micro-pricing down to $0.001 USD and below
+ */
+export declare function formatX402Price(amount: number, currency?: string): X402Price;
+/**
+ * Normalizes price amounts to USD equivalent for accurate micro-pricing comparisons
+ */
+export declare function normalizeToUSD(price: X402Price): number;

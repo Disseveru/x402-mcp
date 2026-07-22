@@ -20,8 +20,11 @@ export interface EscrowContractState {
 }
 export declare class EscrowService {
     static readonly FEE_PRICE: X402Price;
-    private escrows;
+    private redis;
+    private useMemoryFallback;
+    private escrowsFallback;
+    constructor();
     createEscrow(input: EscrowContractInput): Promise<EscrowContractState>;
     releaseEscrow(escrowId: string, proofOfDelivery: string): Promise<EscrowContractState>;
-    getEscrow(escrowId: string): EscrowContractState | undefined;
+    getEscrow(escrowId: string): Promise<EscrowContractState | undefined>;
 }
