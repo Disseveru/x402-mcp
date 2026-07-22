@@ -18,7 +18,7 @@ export interface BazaarCapability {
 }
 
 export class BazaarManifestManager {
-  private static manifestPath = path.join(__dirname, 'manifest.json');
+  private static manifestPath = path.join(process.cwd(), 'bazaar', 'manifest.json');
   private static redisClient: Redis | null = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
   private static REDIS_KEY = 'bazaar:manifest';
 
