@@ -12,7 +12,7 @@ export class X402Verifier {
     if (process.env.NODE_ENV === 'production' && !process.env.X402_SECRET_KEY) {
       throw new Error('FATAL: X402_SECRET_KEY environment variable is missing in production');
     }
-    this.payeeAddress = payeeAddress || process.env.MERCHANT_PAYMENT_ADDRESS || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    this.payeeAddress = payeeAddress || process.env.MERCHANT_PAYMENT_ADDRESS || '0x9b13b78cE133Ce950A879cA1dBF475a479741862';
   }
 
   /**
