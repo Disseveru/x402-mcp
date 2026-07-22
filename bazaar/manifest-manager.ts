@@ -24,30 +24,23 @@ export class BazaarManifestManager {
 
   public static async getManifest(): Promise<any> {
     let parsed: any = null;
-    if (this.redisClient) {
-      try {
-        const cached = await this.redisClient.get(this.REDIS_KEY);
-        if (cached) {
-          parsed = JSON.parse(cached);
-        }
-      } catch (err) {
-        console.error('[BazaarManifestManager] Failed to read from Redis', err);
+    try {
+      const raw = fs.readFileSync(this.manifestPath, 'utf-8');
+      parsed = JSON.parse(raw);
+      if (this.redisClient) {
+        await this.redisClient.set(this.REDIS_KEY, JSON.stringify(parsed)).catch(() => {});
       }
-    }
-    
-    if (!parsed) {
-      try {
-        const raw = fs.readFileSync(this.manifestPath, 'utf-8');
-        parsed = JSON.parse(raw);
-        if (this.redisClient) {
-          await this.redisClient.set(this.REDIS_KEY, JSON.stringify(parsed));
-        }
-      } catch (e) {
-        parsed = { provider: {}, capabilities: [] };
+    } catch (e) {
+      if (this.redisClient) {
+        try {
+          const cached = await this.redisClient.get(this.REDIS_KEY);
+          if (cached) parsed = JSON.parse(cached);
+        } catch (_) {}
       }
+      if (!parsed) parsed = { provider: {}, capabilities: [] };
     }
 
-    const isFreeMode = process.env.X402_FREE_MODE !== 'false';
+    const isFreeMode = process.env.X402_FREE_MODE === 'true';
     if (isFreeMode && parsed.capabilities) {
       parsed.capabilities = parsed.capabilities.map((cap: any) => ({
         ...cap,
